@@ -8,44 +8,51 @@ const errorHandler = require('_helpers/error-handler');
 const multer = require('multer');
 
 var DIR = './uploads/';
- 
-var upload = multer({dest: DIR});
+//define the type of upload multer would be doing and pass in its destination, in our case, its a single file with the name photo
+var upload = multer({dest: DIR}).single('photo');
 
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors());
+//app.use(cors());
+
+app.use(function(req, res, next) {
+    //set headers to allow cross origin request.
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+        res.setHeader('Access-Control-Allow-Credentials', true);        
+        next();
+    });
+
 
 // use JWT auth to secure the api
 app.use(jwt());
 
-// api routes
+// // api routes
 app.use('/users', require('./users/users.controller'));
 app.use('/userstocks', require('./userstock/userstock.controller'));
 
-app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
-    res.setHeader('Access-Control-Allow-Methods', 'POST');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    next();
-  });
 
-     
-  app.get('/api', function (req, res) {
-    res.end('file catcher example');    
-  });
-   
-  app.post('/api', function (req, res) {
-      Console.log('File received');
+
+app.get('/api', function (req, res) {
+    res.end('file catcher example');
+});
+
+app.post('/api', function (req, res,next) {
+    console.log('file received');
+    var path = '';
     upload(req, res, function (err) {
-      if (err) {
-        return res.end(err.toString());
-      }
-   
-      res.end('File is uploaded');
+        if (err) {
+            // An error occurred when uploading
+            console.log(err);
+            return res.status(422).send("an Error occured")
+        }
+        // No error occured.
+        path = req.file.path;
+        return res.send("Upload Completed for " + path);
     });
-  });
+});
 
 // global error handler
 app.use(errorHandler);
