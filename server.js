@@ -8,10 +8,19 @@ const errorHandler = require('_helpers/error-handler');
 const multer = require('multer');
 
 var DIR = './uploads/';
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, DIR)
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.fieldname + '-' + Date.now()+'.'+ file.mimetype.split('/')[1])
+    }
+  })
+
 //define the type of upload multer would be doing and pass in its destination, in our case, its a single file with the name photo
-var upload = multer({dest: DIR}).single('photo');
+var upload = multer({ storage: storage }).single('photo');
 
-
+app.use(express.static('uploads'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 //app.use(cors());
